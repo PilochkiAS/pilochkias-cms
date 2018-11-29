@@ -120,15 +120,7 @@
           { text: 'Цена', value: 'price' },
           { text: 'Действия', value: 'name', sortable: false }
         ],
-        products: [
-          {
-            title: 'Frozen Yogurt',
-            description: 'Frozen Yogurt',
-            category: 1,
-            price: 160,
-            discount: 140
-          }
-        ],
+        products: [],
         editedIndex: -1,
         editedItem: {
           title: '',
@@ -163,24 +155,34 @@
       }
     },
     methods: {
-      installAppBtnClick (e) {
-        // Show the prompt
-        this.pwaPrompt.prompt()
-        // Wait for the user to respond to the prompt
-        this.pwaPrompt.userChoice
-          .then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-              console.log('User accepted the A2HS prompt')
-            } else {
-              console.log('User dismissed the A2HS prompt')
-            }
-            // hide our user interface that shows our A2HS button
-            this.pwaPrompt = null
-          })
-      },
-
       created () {
         // this.initialize()
+      },
+
+      async initialize () {
+        let { data } = await this.$axios.get('/api/products')
+        this.products = data.data
+        // this.$store.commit('initProducts', data)
+      },
+
+      async createProduct (product) {
+        Object.assign(product, {
+          mainImage: '',
+          secondImage: '',
+          isPublished: false
+        })
+        let { data } = await this.$axios.post('/api/products', product)
+        console.log('==> createProduct', data)
+      },
+
+      async updateProduct (product) {
+        let { data } = await this.$axios.put('/api/product/' + product._id, product)
+        console.log('==> updateProduct', data)
+      },
+
+      async removeProduct (product) {
+        let { data } = await this.$axios.delete('/api/product/' + product._id)
+        console.log('==> removeProduct', data)
       },
 
       editItem (item) {
@@ -191,7 +193,16 @@
 
       deleteItem (item) {
         const index = this.products.indexOf(item)
-        confirm('Are you sure you want to delete this item?') && this.products.splice(index, 1)
+
+        console.log('==> item', item)
+
+        const confirmRemove = confirm('Are you sure you want to delete this item?')
+
+        if (confirmRemove) {
+          this.removeProduct(item).then(() => {
+            this.products.splice(index, 1)
+          })
+        }
       },
 
       close () {
@@ -204,20 +215,21 @@
 
       save () {
         if (this.editedIndex > -1) {
-          Object.assign(this.products[this.editedIndex], this.editedItem)
+          console.log('==> this.editedItem', this.editedItem)
+          this.updateProduct(this.editedItem).then(() => {
+            Object.assign(this.products[this.editedIndex], this.editedItem)
+          })
         } else {
+          this.createProduct(this.editedItem).then(() => {
+            Object.assign(this.products[this.editedIndex], this.editedItem)
+          })
           this.products.push(this.editedItem)
         }
         this.close()
       }
     },
     mounted () {
-      window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent Chrome 67 and earlier from automatically showing the prompt
-        e.preventDefault()
-        // Stash the event so it can be triggered later.
-        this.pwaPrompt = e
-      })
+      this.initialize()
     }
   }
 </script>

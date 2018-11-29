@@ -42,7 +42,6 @@
       v-model="rightDrawer"
       fixed
     >
-      <CartSideBar v-model="rightDrawer"/>
     </v-navigation-drawer>
     <v-footer :fixed="fixed" app class="text-xs-center">
       <span>&copy; {{ new Date().getFullYear() }}</span>
@@ -52,7 +51,6 @@
 
 <script>
   import SideBar from '~/components/SideBar'
-  import CartSideBar from '~/components/CartSideBar'
 
   export default {
     data () {
@@ -77,8 +75,7 @@
       }
     },
     components: {
-      SideBar,
-      CartSideBar
+      SideBar
     }
   }
 </script>

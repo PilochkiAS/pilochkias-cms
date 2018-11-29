@@ -74,8 +74,15 @@ module.exports = {
           isPublished: data.isPublished
         })
 
-        res.send({
-          data: await product.save()
+        await product.save((err, doc) => {
+          if (err) {
+            res.status(500).send({error: {message: err.message, info: err }})
+            return
+          }
+          // saved!
+          res.send({
+            data: doc
+          })
         })
       }
 
