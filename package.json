@@ -1,7 +1,7 @@
 {
-  "name": "pilochki-website",
+  "name": "pilochki-cms",
   "version": "1.0.0",
-  "description": "Nuxt.js + Vuetify.js project",
+  "description": "CMS for pilochki-website",
   "author": "OleMan <aom-95@live.com>",
   "private": true,
   "scripts": {

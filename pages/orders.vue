@@ -1,9 +1,6 @@
 <template >
   <v-layout column>
 
-
-
-
     <v-layout justify-center class="pt-4" v-if="pwaPrompt">
       <v-btn
               slot="activator"

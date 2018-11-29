@@ -1,9 +1,12 @@
 module.exports = {
+  server: {
+    port: 4000
+  },
   /*
   ** Headers of the page
   */
   head: {
-    title: 'pilochki-website',
+    title: 'pilochki-cms',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },

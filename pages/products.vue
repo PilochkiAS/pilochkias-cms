@@ -1,119 +1,148 @@
-<template>
-  <v-layout row justify-center>
-    <v-flex xs12 lg12 md12>
-      <v-toolbar class="mb-4">
-        <h3 class="grey--text">{{ category.title }}</h3>
-        <v-spacer></v-spacer>
-        <v-toolbar-items>
-          <v-btn icon class="mx-sm-0"><v-icon>filter_list</v-icon></v-btn>
-          <v-btn icon class="mx-sm-0"><v-icon>swap_vert</v-icon></v-btn>
-          <v-btn icon class="mx-sm-0">
-            <v-icon v-if="!isModuleList" @click="isModuleList = !isModuleList">view_module</v-icon>
-            <v-icon v-else @click="isModuleList = !isModuleList">view_list</v-icon>
-          </v-btn>
-        </v-toolbar-items>
-      </v-toolbar>
-        <v-container>
-          <ProductsContent :isModuleList="isModuleList" :category="category.id"/>
-        </v-container>
-    </v-flex>
+<template >
+  <v-layout column>
+
+
+
+
+    <v-layout justify-center class="pt-4" v-if="pwaPrompt">
+      <v-btn
+              slot="activator"
+              color="primary"
+              outline
+              dark
+              @click="installAppBtnClick"
+      >
+        Установить Приложение
+      </v-btn>
+    </v-layout>
+
   </v-layout>
 </template>
-
 <script>
-  import ProductsContent from '~/components/ProductsContent'
+  import ProductItem from '~/components/ProductItem'
 
   export default {
     data () {
       return {
-        isModuleList: true,
-        category: { title: 'Вся продукция', id: '0' },
-        categories: [
-          { title: 'Вся продукция', id: '0' },
-          { title: 'Пилочки для маникюра и педикюра', id: '1' },
-          { title: 'Сменные файлы для пилочек', id: '2' },
-          { title: 'Наборы с Podo-Disk', id: '3' },
-          { title: 'Шрифты для гравировки', id: '4' },
-          { title: 'Сменные файлы для Podo-Disk', id: '5' },
-          { title: 'Наборы Баф BLACK', id: '6' }
-        ]
-      }
-    },
-    created () {
-      this.handleHash(this.$route.query)
-    },
-    methods: {
-      handleHash (query) {
-        switch (query.category) {
-          case '1':
-            this.category = this.categories[1]
-            break
-          case '2':
-            this.category = this.categories[2]
-            break
-          case '3':
-            this.category = this.categories[3]
-            break
-          case '4':
-            this.category = this.categories[4]
-            break
-          case '5':
-            this.category = this.categories[5]
-            break
-          case '6':
-            this.category = this.categories[6]
-            break
-          default:
-            this.category = this.categories[0]
-            break
-        }
-      }
-    },
-    watch: {
-      $route (to, from) {
-        this.handleHash(to.query)
+        pwaPrompt: null
       }
     },
     components: {
-      ProductsContent
+      ProductItem
+    },
+    methods: {
+      installAppBtnClick (e) {
+        // Show the prompt
+        this.pwaPrompt.prompt()
+        // Wait for the user to respond to the prompt
+        this.pwaPrompt.userChoice
+          .then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+              console.log('User accepted the A2HS prompt')
+            } else {
+              console.log('User dismissed the A2HS prompt')
+            }
+            // hide our user interface that shows our A2HS button
+            this.pwaPrompt = null
+          })
+      }
+    },
+    mounted () {
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault()
+        // Stash the event so it can be triggered later.
+        this.pwaPrompt = e
+      })
     }
   }
 </script>
-
 <style lang="stylus" scoped>
-  .product-categories-btn {
-    width: 230px;
+  .bg-darken {
+    background-color: rgba(71, 73, 78, 0.25);
   }
-  .w-100 {
-    width: 100%;
+  .carousel1 {
+    height: 50vh;
+  }
+  .banner {
+    background-color: #80DEEA;
+    background-image: url("https://images.ua.prom.st/912438962_w800_h640_dsc_0133.jpg");
+    background-size: cover;
+  }
+  .banner-text {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    background-color: #80DEEAA8;
+    h1 {
+      font-size: 40px;
+    }
+  }
+  .products-carousels {
+    flex-direction: row;
   }
 
   @media screen and (max-width: 960px) {
-    .mx-sm-0 {
-      margin-left: 0;
-      margin-right: 0;
+    .display-2 {
+      font-size: 2.2rem !important;
+    }
+    .banner-text {
+      h1 {
+        font-size: 1.5rem;
+      }
+      h2 {
+        font-size: 1.2rem;
+      }
+    }
+    .products-carousels {
+      flex-direction: column !important;
+    }
+    .headline {
+      font-size: 1.5rem !important;
     }
   }
+
 </style>
 
 <style lang="stylus">
-  .product-categories-btn {
-    .v-input__control {
-      height: 48px;
+  .carousel1 {
+    .v-carousel__controls {
+      background: none;
+      justify-content: flex-start;
+      padding-left: 20%;
     }
-    .v-input__slot {
-      margin: 0;
+    .v-btn--active:before, .v-btn:hover:before, .v-btn:focus:before {
+      background: none;
     }
-    .v-input__append-inner {
-      margin: 0;
+    .v-btn i{
+      color: white !important;
+      opacity: 1;
     }
-    .v-text-field {
-      padding: 0;
-    }
-    .v-select__selections {
-      flex-wrap: nowrap;
+    .v-btn--active i{
+      color: #26C6DA !important;
     }
   }
+  .carousel2 {
+    .v-carousel__controls {
+      background: none;
+    }
+    .v-btn--active:before, .v-btn:hover:before, .v-btn:focus:before {
+      background: none;
+    }
+    .v-btn--active i{
+      color: #26C6DA !important;
+    }
+  }
+  .v-carousel {
+    box-shadow: none;
+  }
+
   @media screen and (max-width: 960px) {
+    .carousel1 {
+      .v-carousel__controls {
+        justify-content: center;
+        padding-left: unset;
+      }
+    }
   }
 </style>
