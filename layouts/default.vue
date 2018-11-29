@@ -1,7 +1,6 @@
 <template>
   <v-app>
     <v-navigation-drawer
-      :mini-variant.sync="miniVariant"
       :clipped="true"
       v-model="drawer"
       fixed
@@ -15,7 +14,7 @@
       <v-toolbar-title v-text="title"></v-toolbar-title>
       <v-toolbar-items class="hidden-sm-and-down ml-5">
         <v-btn flat
-               router to="/products"
+               router to="/"
                active-class="secondary primary--text"
                exact
         >
@@ -32,7 +31,9 @@
     </v-toolbar>
 
     <v-content>
-      <nuxt />
+      <v-container>
+        <nuxt />
+      </v-container>
     </v-content>
 
     <v-navigation-drawer
@@ -56,12 +57,10 @@
   export default {
     data () {
       return {
-        cart: [1, 2, 3],
         clipped: false,
         drawer: false,
         sheet: false,
         fixed: false,
-        miniVariant: false,
         right: true,
         rightDrawer: false,
         title: 'PilochkiAS CMS'
@@ -104,44 +103,6 @@
       height: 56px;
       background-color: #C2185B;
       animation: zoom-out 3s linear 0s infinite normal;
-    }
-  }
-
-  $animation-rotate-scale = 15deg;
-  @keyframes rotate {
-    5%{
-      transform: rotate(0deg);
-    }
-    10%{
-      transform: rotate($animation-rotate-scale);
-    }
-    15%{
-      transform: rotate(0deg);
-    }
-    20%{
-      transform: rotate($animation-rotate-scale);
-    }
-    25%{
-      transform: rotate(0deg);
-    }
-  }
-
-  $animation-zoomout-scale = 1.5;
-  @keyframes zoom-out {
-    0%{
-      -webkit-transform: scale(1);
-      transform: scale(1);
-      opacity: 1;
-    }
-    72%{
-      -webkit-transform: scale($animation-zoomout-scale);
-      transform: scale($animation-zoomout-scale);
-      opacity: 0;
-    }
-    100%{
-      -webkit-transform: scale($animation-zoomout-scale);
-      transform: scale($animation-zoomout-scale);
-      opacity: 0;
     }
   }
 
