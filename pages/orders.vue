@@ -14,10 +14,7 @@
 
       <v-toolbar-items>
         <v-btn icon class="mx-sm-0"><v-icon>filter_list</v-icon></v-btn>
-        <v-dialog v-model="dialog" max-width="500px" class="edit-product-dialog">
-          <v-btn slot="activator" color="primary" icon dark class="">
-            <v-icon>add</v-icon>
-          </v-btn>
+        <new-product-dialog v-model="dialog">
           <v-card>
             <v-card-title>
               <span class="headline">{{ formTitle }}</span>
@@ -26,17 +23,17 @@
             <v-card-text>
               <v-container grid-list-md>
                 <v-layout wrap>
-                  <v-flex xs12 sm6>
+                  <v-flex xs12>
                     <v-text-field v-model="editedItem.title" label="Название"></v-text-field>
                   </v-flex>
-                  <v-flex xs12 sm6>
+                  <v-flex xs12>
                     <v-text-field v-model="editedItem.category" label="Категория"></v-text-field>
                   </v-flex>
                   <v-flex xs12>
                     <v-text-field v-model="editedItem.description" label="Описание"></v-text-field>
                   </v-flex>
                   <v-flex xs12 sm6>
-                    <v-text-field v-model="editedItem.discount" label="Скидка"></v-text-field>
+                    <v-text-field v-model="editedItem.discount" label="Цена со скидкой"></v-text-field>
                   </v-flex>
                   <v-flex xs12 sm6>
                     <v-text-field v-model="editedItem.price" label="Цена"></v-text-field>
@@ -51,22 +48,23 @@
               <v-btn color="blue darken-1" flat @click="save">Save</v-btn>
             </v-card-actions>
           </v-card>
-        </v-dialog>
+        </new-product-dialog>
       </v-toolbar-items>
     </v-toolbar>
 
     <v-data-table
             :headers="headers"
-            :items="products"
+            :items="orders"
             :search="search"
             class="elevation-1"
             :loading="false"
     >
       <template slot="items" slot-scope="props">
-        <td class="max-width__title">{{ props.item.title }}</td>
-        <td class="text-xs-right max-width__category">{{ props.item.category }}</td>
-        <td class="text-xs-right">{{ props.item.discount }}</td>
-        <td class="text-xs-right">{{ props.item.price }}</td>
+        <td class="">{{ props.item.id }}</td>
+        <td class=" max-width__category">{{ props.item.customerName }}</td>
+        <td class="">{{ props.item.totalPrice }}</td>
+        <td class="">{{ props.item.isDone ? 'Обработан' : 'Новый' }}</td>
+        <td class="">{{ props.item.createdAt }}</td>
         <td class="justify-center layout px-0">
           <v-btn small
                  @click="editItem(props.item)"
@@ -87,64 +85,82 @@
         Your search for "{{ search }}" found no results.
       </v-alert>
     </v-data-table>
+
+    <v-snackbar
+            v-model="snackbar"
+            :color="snackbarColor"
+            :timeout="2000"
+            top
+            right
+    >
+      {{ snackbarMessage }}
+      <v-btn
+              dark
+              flat
+              @click="snackbar = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
   </v-layout>
 </template>
 <script>
-  import ProductItem from '~/components/ProductItem'
+  import NewProductDialog from '~/components/NewProductDialog'
+  import moment from 'moment'
 
   export default {
     data () {
       return {
+        pwaPrompt: null,
+        snackbar: false,
+        snackbarMessage: '',
+        snackbarColor: '',
+        moduleList: true,
         dialog: false,
         search: '',
+        imageName: '',
+        imageFile: '',
+        imageUrl: '',
         headers: [
           {
-            text: 'Товар',
+            text: 'Заказ',
             align: 'left',
-            sortable: false,
-            value: 'title'
+            value: 'id'
           },
-          { text: 'Категория', value: 'category' },
-          { text: 'Скидка', value: 'discount' },
-          { text: 'Цена', value: 'price' },
-          { text: 'Действия', value: 'name', sortable: false }
+          { text: 'Покупатель', value: 'customerName' },
+          { text: 'Общая сумма', value: 'totalPrice' },
+          { text: 'Состояние', value: 'isDone' },
+          { text: 'Дата оформления', value: 'createdAt' },
+          { text: 'Действия', value: 'id', sortable: false }
         ],
-        products: [
-          {
-            title: 'Frozen Yogurt',
-            description: 'Frozen Yogurt',
-            category: 1,
-            price: 160,
-            discount: 140
-          }
-        ],
+        orders: [],
         editedIndex: -1,
         editedItem: {
-          title: '',
-          description: '',
-          category: 0,
-          price: null,
-          discount: null
+          id: '',
+          customerName: '',
+          customer: '',
+          totalPrice: 0,
+          products: [],
+          isDone: null,
+          createdAt: null
         },
         defaultItem: {
-          title: '',
-          description: '',
-          category: 0,
-          price: null,
-          discount: null
+          number: '',
+          customerName: '',
+          customer: '',
+          totalPrice: 0,
+          isDone: null,
+          createdAt: new Date()
         }
       }
     },
     components: {
-      ProductItem
+      NewProductDialog
     },
     watch: {
       dialog (val) {
         val || this.close()
       }
-    },
-    created () {
-      // this.initialize()
     },
     computed: {
       formTitle () {
@@ -152,15 +168,71 @@
       }
     },
     methods: {
+      /**
+       * API actions
+       * */
+      async initialize () {
+        let { data } = await this.fetchOrders()
+
+        this.orders = data.map((obj, index) => {
+          let totalPrice = 0
+
+          obj.products.forEach(product => {
+            if (product.discount) totalPrice += product.discount
+            else totalPrice += product.price
+          })
+
+          return {
+            id: index + 1,
+            _id: obj._id,
+            customerName: obj.customer.fullName,
+            customer: obj.customer,
+            totalPrice,
+            products: obj.products,
+            isDone: obj.isDone,
+            createdAt: moment(obj.createdAt).format('DD.MM.YY, h:mm:ss a')
+          }
+        })
+      },
+      async fetchOrders () {
+        let { data } = await this.$axios.get('/api/orders?populate=true')
+        console.log('==> fetchOrders', data)
+        return data
+      },
+      async createProduct (product) {
+        Object.assign(product, {
+          mainImage: '',
+          secondImage: '',
+          isPublished: false
+        })
+        let { data } = await this.$axios.post('/api/orders', product)
+        console.log('==> createProduct', data)
+        return data.data
+      },
+      async updateProduct (product) {
+        let { data } = await this.$axios.put('/api/product/' + product._id, product)
+        console.log('==> updateProduct', data)
+      },
+      async removeProduct (product) {
+        let { data } = await this.$axios.delete('/api/product/' + product._id)
+        console.log('==> removeProduct', data)
+      },
+
       editItem (item) {
-        this.editedIndex = this.products.indexOf(item)
+        this.editedIndex = this.orders.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialog = true
       },
-
       deleteItem (item) {
-        const index = this.products.indexOf(item)
-        confirm('Are you sure you want to delete this item?') && this.products.splice(index, 1)
+        const index = this.orders.indexOf(item)
+        const confirmRemove = confirm('Are you sure you want to delete this item?')
+
+        if (confirmRemove) {
+          this.removeProduct(item).then(() => {
+            this.orders.splice(index, 1)
+            this.callSnackbar('Товар успешно удален.', 'success')
+          })
+        }
       },
 
       close () {
@@ -170,23 +242,65 @@
           this.editedIndex = -1
         }, 300)
       },
-
       save () {
         if (this.editedIndex > -1) {
-          Object.assign(this.products[this.editedIndex], this.editedItem)
+          this.updateProduct(this.editedItem).then(() => {
+            Object.assign(this.orders[this.editedIndex], this.editedItem)
+            this.callSnackbar('Товар успешно изменен.', 'success')
+          })
         } else {
-          this.products.push(this.editedItem)
+          this.createProduct(this.editedItem).then(product => {
+            this.orders.push(product)
+            this.callSnackbar('Товар успешно создан.', 'success')
+          })
         }
         this.close()
+      },
+
+      callSnackbar (message, color) {
+        this.snackbarMessage = message
+        this.snackbarColor = color
+        this.snackbar = true
+      },
+
+      pickMainImage () {
+        this.$refs.mainImage.click()
+      },
+      pickSecondImage () {
+        this.$refs.secondImage.click()
       }
     },
     mounted () {
+      this.initialize()
     }
   }
 </script>
 <style lang="stylus" scoped>
-  .bg-darken {
-    background-color: rgba(71, 73, 78, 0.25);
+  .main-image {
+    border-radius: 10px;
+    .layout {
+      display: none;
+      background-color: rgba(0,0,0,0.4);
+
+      p {
+        padding-top: 13px !important;
+      }
+    }
+    &:hover {
+      .layout {
+        display: flex;
+      }
+    }
+  }
+  .image-upload-btn {
+    height: 150px;
+    background-color: #f5f5f5;
+    border-radius: 10px;
+    border: 2px dotted #bdbdbd;
+  }
+  .image-input-label {
+    /*border-bottom: 1px solid rgba(0,0,0,0.38);*/
+    color: rgba(0,0,0,0.54);
   }
   .max-width__category {
     max-width: 200px;
@@ -196,46 +310,13 @@
     max-width: 200px;
     overflow-x: scroll;
   }
-  .banner {
-    background-color: #80DEEA;
-    background-image: url("https://images.ua.prom.st/912438962_w800_h640_dsc_0133.jpg");
-    background-size: cover;
-  }
   .edit-product-dialog {
     display: flex !important;
     align-items: center;
   }
-  .banner-text {
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    background-color: #80DEEAA8;
-    h1 {
-      font-size: 40px;
-    }
-  }
-  .products-carousels {
-    flex-direction: row;
-  }
 
   @media screen and (max-width: 960px) {
-    .display-2 {
-      font-size: 2.2rem !important;
-    }
-    .banner-text {
-      h1 {
-        font-size: 1.5rem;
-      }
-      h2 {
-        font-size: 1.2rem;
-      }
-    }
-    .products-carousels {
-      flex-direction: column !important;
-    }
-    .headline {
-      font-size: 1.5rem !important;
-    }
+
   }
 
 </style>
@@ -243,7 +324,6 @@
 <style lang="stylus">
   .search-products-input {
     .v-input__slot {
-      /*margin: 0;*/
       box-shadow: none !important;
       /*background: #e0e0e0 !important;*/
       background: #fff0 !important;
@@ -251,11 +331,6 @@
   }
 
   @media screen and (max-width: 960px) {
-    .carousel1 {
-      .v-carousel__controls {
-        justify-content: center;
-        padding-left: unset;
-      }
-    }
+
   }
 </style>
