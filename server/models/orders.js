@@ -6,9 +6,13 @@ mongoose.plugin(uniqueValidator)
 
 const OrdersSchema = new Schema({
   products: [{
-    type: Schema.ObjectId,
-    ref: 'Products'
-  }],
+  	product: {
+      type: Schema.ObjectId,
+      ref: 'Products'
+    },
+		totalPrice: Number,
+		number: Number
+	}],
 	customer: {
   	fullName: { type: String },
   	phone: { type: String },

@@ -14,29 +14,90 @@
 
       <v-toolbar-items>
         <v-btn icon class="mx-sm-0"><v-icon>filter_list</v-icon></v-btn>
-        <new-product-dialog v-model="dialog">
+
+        <v-dialog v-model="dialog" max-width="500px" class="edit-order-dialog">
+          <v-btn slot="activator" color="primary" icon dark class="hidden-sm-and-down hidden-sm-and-up">
+            <v-icon>add</v-icon>
+          </v-btn>
           <v-card>
             <v-card-title>
-              <span class="headline">{{ formTitle }}</span>
+              <span class="headline">Просмотр заказа</span>
+              <v-spacer></v-spacer>
+              <p class="ma-0">id: {{ editedItem._id }}</p>
             </v-card-title>
 
-            <v-card-text>
-              <v-container grid-list-md>
+            <v-card-text class="pt-0 ">
+              <v-container grid-list-md class="pt-0">
                 <v-layout wrap>
                   <v-flex xs12>
-                    <v-text-field v-model="editedItem.title" label="Название"></v-text-field>
+                    <v-text-field
+                            value="Информация о покупателе"
+                            box
+                            readonly
+                            class="pt-3 mt-0 hide-details"
+                    ></v-text-field>
                   </v-flex>
                   <v-flex xs12>
-                    <v-text-field v-model="editedItem.category" label="Категория"></v-text-field>
+                    <v-text-field
+                            :value="editedItem.customer.fullName"
+                            readonly
+                            class="pt-0 mt-0 hide-details"
+                    ></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6>
+                    <v-text-field
+                            :value="editedItem.customer.phone"
+                            readonly
+                            class="pt-0 mt-0 hide-details"
+                    ></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6>
+                    <v-text-field
+                            :value="editedItem.customer.address"
+                            readonly
+                            class="pt-0 mt-0 hide-details"
+                    ></v-text-field>
                   </v-flex>
                   <v-flex xs12>
-                    <v-text-field v-model="editedItem.description" label="Описание"></v-text-field>
+                    <v-text-field
+                            value="Товары"
+                            box
+                            readonly
+                            class="pt-3 mt-0 hide-details"
+                    ></v-text-field>
                   </v-flex>
-                  <v-flex xs12 sm6>
-                    <v-text-field v-model="editedItem.discount" label="Цена со скидкой"></v-text-field>
-                  </v-flex>
-                  <v-flex xs12 sm6>
-                    <v-text-field v-model="editedItem.price" label="Цена"></v-text-field>
+                  <v-flex xs12
+                          v-for="product in editedItem.products"
+                          :key="product.title"
+                  >
+                    <v-card flat tile class="py-0 px-0">
+                        <!--<v-card-title primary-title class="py-1 px-3">-->
+                          <!--<h4 class="mb-0">{{ product.product.title}}</h4>-->
+                          <!--<v-spacer></v-spacer>-->
+                        <!--</v-card-title>-->
+
+                        <v-layout class="ma-0 pb-2 px-3">
+                          <v-img
+                                  :src="'/api/image/' + product.product.mainImage"
+                                  height="100px"
+                          ></v-img>
+
+                          <v-flex xs7 class="py-0">
+                            <v-layout class="ma-0 px-1">
+                              <h4 class="mb-1">{{ product.product.title}}</h4>
+                            </v-layout>
+                            <v-layout class="ma-0 px-1">
+                              <p class="ma-0">Сумма:</p>
+                              <p class="primary--text ml-1 mb-0">{{ product.totalPrice }} грн</p>
+                            </v-layout>
+                            <v-layout class="ma-0 px-1">
+                              <p class="ma-0">Количество:</p>
+                              <p class="primary--text ml-1 mb-0">{{ product.number }} шт</p>
+                            </v-layout>
+                          </v-flex>
+                        </v-layout>
+                        <v-divider></v-divider>
+                      </v-card>
                   </v-flex>
                 </v-layout>
               </v-container>
@@ -48,7 +109,7 @@
               <v-btn color="blue darken-1" flat @click="save">Save</v-btn>
             </v-card-actions>
           </v-card>
-        </new-product-dialog>
+        </v-dialog>
       </v-toolbar-items>
     </v-toolbar>
 
@@ -60,17 +121,17 @@
             :loading="false"
     >
       <template slot="items" slot-scope="props">
-        <td class="">{{ props.item.id }}</td>
-        <td class=" max-width__category">{{ props.item.customerName }}</td>
-        <td class="">{{ props.item.totalPrice }}</td>
-        <td class="">{{ props.item.isDone ? 'Обработан' : 'Новый' }}</td>
-        <td class="">{{ props.item.createdAt }}</td>
-        <td class="justify-center layout px-0">
+        <td class="" @click="editItem(props.item)">{{ props.item.id }}</td>
+        <td class=" max-width__category" @click="editItem(props.item)">{{ props.item.customerName }}</td>
+        <td class="" @click="editItem(props.item)">{{ props.item.totalPrice }}</td>
+        <td class="" @click="editItem(props.item)">{{ props.item.isDone ? 'Обработан' : 'Новый' }}</td>
+        <td class="" @click="editItem(props.item)">{{ props.item.createdAt }}</td>
+        <td class="justify-center layout px-0 pt-1">
           <v-btn small
                  @click="editItem(props.item)"
                  icon
           >
-            <v-icon small>edit</v-icon>
+            <v-icon small>info</v-icon>
           </v-btn>
 
           <v-btn small
@@ -89,7 +150,7 @@
     <v-snackbar
             v-model="snackbar"
             :color="snackbarColor"
-            :timeout="2000"
+            :timeout="1000"
             top
             right
     >
@@ -105,22 +166,16 @@
   </v-layout>
 </template>
 <script>
-  import NewProductDialog from '~/components/NewProductDialog'
   import moment from 'moment'
 
   export default {
     data () {
       return {
-        pwaPrompt: null,
         snackbar: false,
         snackbarMessage: '',
         snackbarColor: '',
-        moduleList: true,
         dialog: false,
         search: '',
-        imageName: '',
-        imageFile: '',
-        imageUrl: '',
         headers: [
           {
             text: 'Заказ',
@@ -145,17 +200,15 @@
           createdAt: null
         },
         defaultItem: {
-          number: '',
+          id: '',
           customerName: '',
           customer: '',
           totalPrice: 0,
+          products: [],
           isDone: null,
           createdAt: new Date()
         }
       }
-    },
-    components: {
-      NewProductDialog
     },
     watch: {
       dialog (val) {
@@ -163,14 +216,8 @@
       }
     },
     computed: {
-      formTitle () {
-        return this.editedIndex === -1 ? 'Создать товар' : 'Изменить товар'
-      }
     },
     methods: {
-      /**
-       * API actions
-       * */
       async initialize () {
         let { data } = await this.fetchOrders()
 
@@ -178,8 +225,7 @@
           let totalPrice = 0
 
           obj.products.forEach(product => {
-            if (product.discount) totalPrice += product.discount
-            else totalPrice += product.price
+            totalPrice += product.totalPrice
           })
 
           return {
@@ -194,28 +240,21 @@
           }
         })
       },
+      /**
+       * API actions
+       * */
       async fetchOrders () {
         let { data } = await this.$axios.get('/api/orders?populate=true')
         console.log('==> fetchOrders', data)
         return data
       },
-      async createProduct (product) {
-        Object.assign(product, {
-          mainImage: '',
-          secondImage: '',
-          isPublished: false
-        })
-        let { data } = await this.$axios.post('/api/orders', product)
-        console.log('==> createProduct', data)
-        return data.data
+      async updateOrder (order) {
+        let { data } = await this.$axios.put('/api/order/' + order._id, order)
+        console.log('==> updateOrder', data)
       },
-      async updateProduct (product) {
-        let { data } = await this.$axios.put('/api/product/' + product._id, product)
-        console.log('==> updateProduct', data)
-      },
-      async removeProduct (product) {
-        let { data } = await this.$axios.delete('/api/product/' + product._id)
-        console.log('==> removeProduct', data)
+      async removeOrder (order) {
+        let { data } = await this.$axios.delete('/api/order/' + order._id)
+        console.log('==> removeOrder', data)
       },
 
       editItem (item) {
@@ -225,12 +264,12 @@
       },
       deleteItem (item) {
         const index = this.orders.indexOf(item)
-        const confirmRemove = confirm('Are you sure you want to delete this item?')
+        const confirmRemove = confirm('Вы действительно хотите удалить этот элемент?')
 
         if (confirmRemove) {
-          this.removeProduct(item).then(() => {
+          this.removeOrder(item).then(() => {
             this.orders.splice(index, 1)
-            this.callSnackbar('Товар успешно удален.', 'success')
+            this.callSnackbar('Заказ успешно удален.', 'success')
           })
         }
       },
@@ -244,17 +283,12 @@
       },
       save () {
         if (this.editedIndex > -1) {
-          this.updateProduct(this.editedItem).then(() => {
+          this.updateOrder(this.editedItem).then(() => {
             Object.assign(this.orders[this.editedIndex], this.editedItem)
-            this.callSnackbar('Товар успешно изменен.', 'success')
+            this.callSnackbar('Заказ успешно изменен.', 'success')
           })
-        } else {
-          this.createProduct(this.editedItem).then(product => {
-            this.orders.push(product)
-            this.callSnackbar('Товар успешно создан.', 'success')
-          })
+          this.close()
         }
-        this.close()
       },
 
       callSnackbar (message, color) {
@@ -310,7 +344,7 @@
     max-width: 200px;
     overflow-x: scroll;
   }
-  .edit-product-dialog {
+  .edit-order-dialog {
     display: flex !important;
     align-items: center;
   }
@@ -328,6 +362,17 @@
       /*background: #e0e0e0 !important;*/
       background: #fff0 !important;
     }
+  }
+  .edit-order-dialog {
+    input {
+      color: #47494e;
+    }
+
+
+  }
+
+  .hide-details .v-text-field__details {
+    display: none;
   }
 
   @media screen and (max-width: 960px) {

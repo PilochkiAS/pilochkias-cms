@@ -312,7 +312,6 @@
         this.editedItem = Object.assign({}, item)
         this.dialog = true
       },
-
       deleteItem (item) {
         const index = this.products.indexOf(item)
         const confirmRemove = confirm('Are you sure you want to delete this item?')

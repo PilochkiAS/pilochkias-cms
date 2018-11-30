@@ -10,7 +10,7 @@ module.exports = {
   async getOrders (req, res, next) {
     let orders = Orders.find()
 
-    if (req.query.populate) orders.populate('products')
+    if (req.query.populate) await orders.populate('products.product')
 
     orders.exec(async (err, docs) => {
       if (err) {
@@ -50,23 +50,35 @@ module.exports = {
       const data = req.body
       let order = {}
 
-      if (!data.products || !data.customer || !data.isDone) {
-        new Error('Wrong data')
-      }
-
       if (id) {
         Orders.findByIdAndUpdate(id, { $set: data}, { new: true }, function (err, doc) {
-          if (err) new Error(err.message)
+          if (err) {
+            res.status(500).send({error: {message: err.message, info: err }})
+            return
+          }
           res.send(doc)
         })
       } else {
-        order = new Orders(data)
+        order = new Orders({
+          products: data.products,
+          customer: {
+            fullName: data.customer.fullName,
+            phone: data.customer.phone,
+            address: data.customer.address
+          },
+          isDone: false
+        })
 
-        res.send({
-          data: await order.save()
+        await order.save((err, doc) => {
+          if (err) {
+            res.status(500).send({error: {message: err.message, info: err }})
+            return
+          }
+          res.send({
+            data: doc
+          })
         })
       }
-
     } catch (err) {
       res.status(500).send({ error: { message: err.message, info: err }})
     }
