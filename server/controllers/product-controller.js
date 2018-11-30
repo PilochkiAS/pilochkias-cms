@@ -31,7 +31,6 @@ module.exports = {
    *  GET /api/product/:id
    * */
   async getProductById (req, res, next) {
-
     await Products.findOne({_id: ObjectId(req.params.id)}, function (err, doc) {
       if (err) {
         res.status(500).send({ error: {message: err.message, info: err }})
@@ -54,20 +53,36 @@ module.exports = {
       const data = req.body
       let product = {}
 
-      if (!data.title || !data.description || !data.price || !data.discount || !data.isPublished) {
-        new Error('Wrong data')
-      }
-
       if (id) {
         Products.findByIdAndUpdate(id, { $set: data}, { new: true }, function (err, doc) {
-          if (err) new Error(err.message)
+          if (err) {
+            res.status(500).send({error: {message: err.message, info: err }})
+            return
+          }
+
           res.send(doc)
         })
       } else {
-        product = new Products(data)
+        product = new Products({
+          title: data.title,
+          description: data.description,
+          mainImage: data.mainImage,
+          secondImage: data.secondImage,
+          category: data.category,
+          price: data.price,
+          discount: data.discount,
+          isPublished: data.isPublished
+        })
 
-        res.send({
-          data: await product.save()
+        await product.save((err, doc) => {
+          if (err) {
+            res.status(500).send({error: {message: err.message, info: err }})
+            return
+          }
+          // saved!
+          res.send({
+            data: doc
+          })
         })
       }
 

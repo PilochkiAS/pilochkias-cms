@@ -7,7 +7,7 @@
         <!--height="150px"-->
         <!--&gt;</v-img>-->
         <v-img
-                :src="item.imgSrc"
+                :src="getImageUrl(item.mainImage)"
                 height="150px"
         >
           <v-layout fill-height class="ma-0">
@@ -58,6 +58,14 @@
     created () {
 
     },
+    methods: {
+      getImageUrl (id) {
+        if (id) {
+          return '/api/image/' + id
+        }
+        return ''
+      }
+    },
     props: ['isModuleList', 'item']
   }
 </script>
@@ -66,7 +74,6 @@
   .v-btn.action-btn:hover .v-btn__content .v-icon {
     color: #26C6DA;
   }
-
   .discount {
     text-decoration: line-through;
   }

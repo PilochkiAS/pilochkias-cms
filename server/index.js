@@ -10,6 +10,7 @@ const app = express()
 const index = require('./routes/index')
 const products = require('./routes/products')
 const orders = require('./routes/orders')
+const images = require('./routes/images')
 
 app.use(cookieParser())
   .use(express.json())
@@ -17,6 +18,7 @@ app.use(cookieParser())
   .use(index)
   .use(products)
   .use(orders)
+  .use(images)
 
 // Export the server middleware
 module.exports = {

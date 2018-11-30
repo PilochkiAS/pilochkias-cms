@@ -13,6 +13,12 @@ const ProductsSchema = new Schema({
 		type: String,
 		// unique:'User with email "{VALUE}" already exist.',
 	},
+	mainImage: {
+		type: String,
+	},
+	secondImage: {
+		type: String,
+	},
 	category: {
 		type: Number,
     required: 'Product category is required'

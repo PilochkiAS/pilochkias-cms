@@ -1,254 +1,426 @@
 <template >
   <v-layout column>
-    <v-carousel light class="carousel1" :height="'50vh'">
-      <v-carousel-item
-              v-for="banner in banners"
-              :key="banner.title"
-      >
-        <v-layout fill-height class="ma-0 px-5 banner">
-          <v-flex xs12 md6 class="banner-text px-5">
-            <h1 class="primary--text pa-1">{{ banner.title }}</h1>
-            <h2 class="white--text pa-1 font-weight-light">{{ banner.description }}</h2>
+    <v-toolbar class="mb-4">
+      <v-layout align-center>
+        <v-text-field
+                placeholder="Поиск"
+                solo
+                clearable
+                class="search-products-input"
+                v-model="search"
+                hide-details
+        ></v-text-field>
+      </v-layout>
 
-            <div class="text-xs-left">
-              <v-btn
-                      slot="activator"
-                      color="primary"
-                      outline
-                      dark
-                      nuxt
-                      :to="banner.link"
-              >
-                Подробнее
-              </v-btn>
-            </div>
-          </v-flex>
-          <v-flex xs0 md6 class="">
-          </v-flex>
-        </v-layout>
+      <v-toolbar-items>
+        <v-btn icon class="mx-sm-0"><v-icon>filter_list</v-icon></v-btn>
+        <new-product-dialog v-model="dialog">
+          <v-card>
+            <v-card-title>
+              <span class="headline">{{ formTitle }}</span>
+            </v-card-title>
 
-      </v-carousel-item>
-    </v-carousel>
+            <v-card-text>
+              <v-container grid-list-md>
+                <v-layout wrap>
+                  <v-flex xs12 sm6>
+                    <h5 class="image-input-label px-2 subheading">Основное фото</h5>
+                    <v-img
+                            :src="'/api/image/' + editedItem.mainImage"
+                            height="150"
+                            v-if="editedItem.mainImage"
+                            class="main-image"
+                    >
+                      <v-layout fill-height justify-end class="bg-darken">
+                        <v-btn dark icon @click="removeMainImage">
+                          <v-icon>delete</v-icon>
+                        </v-btn>
+                      </v-layout>
+                    </v-img>
+                    <v-btn flat
+                           block
+                           large
+                           color="grey"
+                           @click='pickMainImage'
+                           v-else
+                           class="image-upload-btn"
+                    >
+                      <v-icon>attach_file</v-icon>
+                    </v-btn>
+                    <input
+                            type="file"
+                            style="display: none"
+                            ref="mainImage"
+                            accept="image/*"
+                            @change="mainImageUpload"
+                    >
+                  </v-flex>
+                  <v-flex xs12 sm6>
+                    <h5 class="image-input-label px-2 subheading">Дополнительное фото</h5>
+                    <v-img
+                            :src="'/api/image/' + editedItem.secondImage"
+                            height="150"
+                            v-if="editedItem.secondImage"
+                            class="main-image"
+                    >
+                      <v-layout fill-height justify-end class="bg-darken">
+                        <v-btn dark icon @click="removeSecondImage">
+                          <v-icon>delete</v-icon>
+                        </v-btn>
+                      </v-layout>
+                    </v-img>
+                    <v-btn flat
+                           block
+                           large
+                           color="grey"
+                           @click='pickSecondImage'
+                           v-else
+                           class="image-upload-btn"
+                    >
+                      <v-icon>attach_file</v-icon>
+                    </v-btn>
+                    <input
+                            type="file"
+                            style="display: none"
+                            ref="secondImage"
+                            accept="image/*"
+                            @change="secondImageUpload"
+                    >
+                  </v-flex>
+                  <v-flex xs12>
+                    <v-text-field v-model="editedItem.title" label="Название"></v-text-field>
+                  </v-flex>
+                  <v-flex xs12>
+                    <v-text-field v-model="editedItem.category" label="Категория"></v-text-field>
+                  </v-flex>
+                  <v-flex xs12>
+                    <v-text-field v-model="editedItem.description" label="Описание"></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6>
+                    <v-text-field v-model="editedItem.discount" label="Цена со скидкой"></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6>
+                    <v-text-field v-model="editedItem.price" label="Цена"></v-text-field>
+                  </v-flex>
+                </v-layout>
+              </v-container>
+            </v-card-text>
 
-    <v-layout justify-center class="pt-4" v-if="pwaPrompt">
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" flat @click="close">Cancel</v-btn>
+              <v-btn color="blue darken-1" flat @click="save">Save</v-btn>
+            </v-card-actions>
+          </v-card>
+        </new-product-dialog>
+      </v-toolbar-items>
+    </v-toolbar>
+
+    <v-data-table
+            :headers="headers"
+            :items="products"
+            :search="search"
+            class="elevation-1"
+            :loading="false"
+    >
+      <template slot="items" slot-scope="props">
+        <td class="max-width__title">{{ props.item.title }}</td>
+        <td class="text-xs-right max-width__category">{{ props.item.category }}</td>
+        <td class="text-xs-right">{{ props.item.discount }}</td>
+        <td class="text-xs-right">{{ props.item.price }}</td>
+        <td class="justify-center layout px-0">
+          <v-btn small
+                 @click="editItem(props.item)"
+                 icon
+          >
+            <v-icon small>edit</v-icon>
+          </v-btn>
+
+          <v-btn small
+                 @click="deleteItem(props.item)"
+                 icon
+          >
+            <v-icon small>delete</v-icon>
+          </v-btn>
+        </td>
+      </template>
+      <v-alert slot="no-results" :value="true" color="error" icon="warning">
+        Your search for "{{ search }}" found no results.
+      </v-alert>
+    </v-data-table>
+
+    <v-snackbar
+            v-model="snackbar"
+            :color="snackbarColor"
+            :timeout="2000"
+            top
+            right
+    >
+      {{ snackbarMessage }}
       <v-btn
-              slot="activator"
-              color="primary"
-              outline
               dark
-              @click="installAppBtnClick"
+              flat
+              @click="snackbar = false"
       >
-        Установить Приложение
+        Close
       </v-btn>
-    </v-layout>
-
-    <v-layout row class="products-carousels">
-      <v-flex  xs12 md6>
-        <h2 class="pt-4 pb-4 text-xs-center">Наиболее популярные товары</h2>
-
-        <v-carousel light class="carousel2" height="280">
-          <v-carousel-item
-                  v-for="item in products"
-                  :key="item.title"
-          >
-
-            <v-layout justify-center fill-height>
-              <v-flex xs8>
-                <ProductItem :isModuleList="isModuleList" :item="item"/>
-              </v-flex>
-            </v-layout>
-
-          </v-carousel-item>
-        </v-carousel>
-      </v-flex>
-
-      <v-flex xs12 md6>
-        <h2 class="pt-4 pb-4 text-xs-center">Акции и скидки</h2>
-
-        <v-carousel light class="carousel2" height="280">
-          <v-carousel-item
-                  v-for="item in products"
-                  :key="item.title"
-          >
-
-            <v-layout justify-center fill-height>
-              <v-flex xs8>
-                <ProductItem :isModuleList="isModuleList" :item="item"/>
-              </v-flex>
-            </v-layout>
-
-          </v-carousel-item>
-        </v-carousel>
-      </v-flex>
-    </v-layout>
+    </v-snackbar>
   </v-layout>
 </template>
 <script>
-  import ProductItem from '~/components/ProductItem'
+  import NewProductDialog from '~/components/NewProductDialog'
 
   export default {
     data () {
       return {
-        banners: [
-          { title: 'ПИЛКИ И ФАЙЛЫ',
-            description: 'Всех размеров для маникюра и педикюра',
-            link: '/products#saw-files',
-            imgSrc: 'https://images.ua.prom.st/1406733799_viber_image_22.jpg'
+        pwaPrompt: null,
+        snackbar: false,
+        snackbarMessage: '',
+        snackbarColor: '',
+        moduleList: true,
+        dialog: false,
+        search: '',
+        imageName: '',
+        imageFile: '',
+        imageUrl: '',
+        headers: [
+          {
+            text: 'Товар',
+            align: 'left',
+            sortable: false,
+            value: 'title'
           },
-          { title: 'ДИСК SMART',
-            link: '/products#smart-disks',
-            description: `Диск Smart - это инновационный, запатентованный компанией SMART инструмент`,
-            imgSrc: 'https://images.ua.prom.st/1406732993_viber_image_1.jpg'
-          },
-          { title: 'ОБОРУДОВАНИЕ',
-            link: '/products#equipment',
-            description: 'Аппараты, лампы и пылесосы для маникюра и педикюра',
-            imgSrc: 'https://pilochki.com/files/12pzjm0qsiozn8kbg9xw/slider_original.jpg'
-          }
+          { text: 'Категория', value: 'category' },
+          { text: 'Цена со скидкой', value: 'discount' },
+          { text: 'Цена', value: 'price' },
+          { text: 'Действия', value: 'name', sortable: false }
         ],
-        products: [
-          {
-            title: 'Пилочка для маникюра BANAN',
-            id: 'qweqweqwe1',
-            price: 160,
-            discount: 140,
-            imgSrc: 'https://images.ua.prom.st/912158191_w800_h640_dsc_0003.jpg'
-          },
-          {
-            title: 'Пилочка для маникюра МAXI',
-            id: 'qweqweqwe2',
-            price: 180,
-            discount: 0,
-            imgSrc: 'https://images.ua.prom.st/912416731_w800_h640_dsc_0788.jpg'
-          },
-          {
-            title: 'Основа для маникюра BAF',
-            id: 'qweqweqwe3',
-            price: 90,
-            discount: 0,
-            imgSrc: 'https://images.ua.prom.st/912438962_w800_h640_dsc_0133.jpg'
-          }
-        ],
-        isModuleList: true,
-        pwaPrompt: null
+        products: [],
+        editedIndex: -1,
+        editedItem: {
+          title: '',
+          description: '',
+          category: 0,
+          price: null,
+          discount: null,
+          mainImage: null,
+          secondImage: null
+        },
+        defaultItem: {
+          title: '',
+          description: '',
+          category: 0,
+          price: null,
+          discount: null,
+          mainImage: null,
+          secondImage: null
+        }
       }
     },
     components: {
-      ProductItem
+      NewProductDialog
+    },
+    watch: {
+      dialog (val) {
+        val || this.close()
+      }
+    },
+    computed: {
+      formTitle () {
+        return this.editedIndex === -1 ? 'Создать товар' : 'Изменить товар'
+      }
     },
     methods: {
-      installAppBtnClick (e) {
-        // Show the prompt
-        this.pwaPrompt.prompt()
-        // Wait for the user to respond to the prompt
-        this.pwaPrompt.userChoice
-          .then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-              console.log('User accepted the A2HS prompt')
-            } else {
-              console.log('User dismissed the A2HS prompt')
-            }
-            // hide our user interface that shows our A2HS button
-            this.pwaPrompt = null
+      /**
+       * API actions
+       * */
+      async initialize () {
+        let { data } = await this.$axios.get('/api/products')
+        this.products = data.data
+        // this.$store.commit('initProducts', data)
+      },
+      async createProduct (product) {
+        Object.assign(product, {
+          mainImage: '',
+          secondImage: '',
+          isPublished: false
+        })
+        let { data } = await this.$axios.post('/api/products', product)
+        console.log('==> createProduct', data)
+        return data.data
+      },
+      async updateProduct (product) {
+        let { data } = await this.$axios.put('/api/product/' + product._id, product)
+        console.log('==> updateProduct', data)
+      },
+      async removeProduct (product) {
+        let { data } = await this.$axios.delete('/api/product/' + product._id)
+        console.log('==> removeProduct', data)
+      },
+      async imageUpload (formData) {
+        let { data } = await this.$axios.post('/api/images', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+        console.log('==> imageUpload', data)
+
+        return data
+      },
+      async removeImage (id) {
+        let { data } = await this.$axios.delete('/api/image/' + id)
+        console.log('==> removeImage', data)
+        return data
+      },
+
+      mainImageUpload () {
+        const formData = new FormData()
+        const imageFile = this.$refs.mainImage
+
+        formData.append('productImage', imageFile.files[0])
+
+        this.imageUpload(formData).then(image => {
+          this.editedItem.mainImage = image.data
+        })
+      },
+      removeMainImage () {
+        this.removeImage(this.editedItem.mainImage).then(image => {
+          this.editedItem.mainImage = null
+          this.callSnackbar('Изображение удалено.', 'success')
+        })
+      },
+
+      secondImageUpload () {
+        const formData = new FormData()
+        const imageFile = this.$refs.secondImage
+
+        formData.append('productImage', imageFile.files[0])
+
+        this.imageUpload(formData).then(image => {
+          this.editedItem.secondImage = image.data
+        })
+      },
+      removeSecondImage () {
+        this.removeImage(this.editedItem.secondImage).then(() => {
+          this.editedItem.secondImage = null
+          this.callSnackbar('Изображение удалено.', 'success')
+        })
+      },
+
+      editItem (item) {
+        this.editedIndex = this.products.indexOf(item)
+        this.editedItem = Object.assign({}, item)
+        this.dialog = true
+      },
+      deleteItem (item) {
+        const index = this.products.indexOf(item)
+        const confirmRemove = confirm('Are you sure you want to delete this item?')
+
+        if (confirmRemove) {
+          this.removeProduct(item).then(() => {
+            this.products.splice(index, 1)
+            this.callSnackbar('Товар успешно удален.', 'success')
           })
+        }
+      },
+
+      close () {
+        this.dialog = false
+        setTimeout(() => {
+          this.editedItem = Object.assign({}, this.defaultItem)
+          this.editedIndex = -1
+        }, 300)
+      },
+
+      callSnackbar (message, color) {
+        this.snackbarMessage = message
+        this.snackbarColor = color
+        this.snackbar = true
+      },
+
+      save () {
+        if (this.editedIndex > -1) {
+          this.updateProduct(this.editedItem).then(() => {
+            Object.assign(this.products[this.editedIndex], this.editedItem)
+            this.callSnackbar('Товар успешно изменен.', 'success')
+          })
+        } else {
+          this.createProduct(this.editedItem).then(product => {
+            this.products.push(product)
+            this.callSnackbar('Товар успешно создан.', 'success')
+          })
+        }
+        this.close()
+      },
+
+      pickMainImage () {
+        this.$refs.mainImage.click()
+      },
+      pickSecondImage () {
+        this.$refs.secondImage.click()
       }
     },
     mounted () {
-      window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent Chrome 67 and earlier from automatically showing the prompt
-        e.preventDefault()
-        // Stash the event so it can be triggered later.
-        this.pwaPrompt = e
-      })
+      this.initialize()
     }
   }
 </script>
 <style lang="stylus" scoped>
-  .bg-darken {
-    background-color: rgba(71, 73, 78, 0.25);
-  }
-  .carousel1 {
-    height: 50vh;
-  }
-  .banner {
-    background-color: #80DEEA;
-    background-image: url("https://images.ua.prom.st/912438962_w800_h640_dsc_0133.jpg");
-    background-size: cover;
-  }
-  .banner-text {
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    background-color: #80DEEAA8;
-    h1 {
-      font-size: 40px;
+  .main-image {
+    border-radius: 10px;
+    .layout {
+      display: none;
+      background-color: rgba(0,0,0,0.4);
+
+      p {
+        padding-top: 13px !important;
+      }
+    }
+    &:hover {
+      .layout {
+        display: flex;
+      }
     }
   }
-  .products-carousels {
-    flex-direction: row;
+  .image-upload-btn {
+    height: 150px;
+    background-color: #f5f5f5;
+    border-radius: 10px;
+    border: 2px dotted #bdbdbd;
+  }
+  .image-input-label {
+    /*border-bottom: 1px solid rgba(0,0,0,0.38);*/
+    color: rgba(0,0,0,0.54);
+  }
+  .max-width__category {
+    max-width: 200px;
+    overflow-x: scroll;
+  }
+  .max-width__title {
+    max-width: 200px;
+    overflow-x: scroll;
+  }
+  .edit-product-dialog {
+    display: flex !important;
+    align-items: center;
   }
 
   @media screen and (max-width: 960px) {
-    .display-2 {
-      font-size: 2.2rem !important;
-    }
-    .banner-text {
-      h1 {
-        font-size: 1.5rem;
-      }
-      h2 {
-        font-size: 1.2rem;
-      }
-    }
-    .products-carousels {
-      flex-direction: column !important;
-    }
-    .headline {
-      font-size: 1.5rem !important;
-    }
+
   }
 
 </style>
 
 <style lang="stylus">
-  .carousel1 {
-    .v-carousel__controls {
-      background: none;
-      justify-content: flex-start;
-      padding-left: 20%;
+  .search-products-input {
+    .v-input__slot {
+      box-shadow: none !important;
+      /*background: #e0e0e0 !important;*/
+      background: #fff0 !important;
     }
-    .v-btn--active:before, .v-btn:hover:before, .v-btn:focus:before {
-      background: none;
-    }
-    .v-btn i{
-      color: white !important;
-      opacity: 1;
-    }
-    .v-btn--active i{
-      color: #26C6DA !important;
-    }
-  }
-  .carousel2 {
-    .v-carousel__controls {
-      background: none;
-    }
-    .v-btn--active:before, .v-btn:hover:before, .v-btn:focus:before {
-      background: none;
-    }
-    .v-btn--active i{
-      color: #26C6DA !important;
-    }
-  }
-  .v-carousel {
-    box-shadow: none;
   }
 
   @media screen and (max-width: 960px) {
-    .carousel1 {
-      .v-carousel__controls {
-        justify-content: center;
-        padding-left: unset;
-      }
-    }
+
   }
 </style>
