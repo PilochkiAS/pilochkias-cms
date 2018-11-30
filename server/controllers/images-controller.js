@@ -53,9 +53,16 @@ module.exports = {
         title: req.file.originalname
       })
 
-      res.send({
-        data: await newImage.save(),
-        message: `Image ${req.file.originalname} successfully saved.`
+      await newImage.save((err, doc) => {
+        if (err) {
+          res.status(500).send({error: {message: err.message, info: err }})
+          return
+        }
+
+        res.send({
+          data: doc._id,
+          name: doc.title
+        })
       })
 
     } catch (err) {

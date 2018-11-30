@@ -87,18 +87,6 @@
         Your search for "{{ search }}" found no results.
       </v-alert>
     </v-data-table>
-
-    <v-layout justify-center class="pt-4" v-if="pwaPrompt">
-      <v-btn
-              slot="activator"
-              color="primary"
-              outline
-              dark
-              @click="installAppBtnClick"
-      >
-        Установить Приложение
-      </v-btn>
-    </v-layout>
   </v-layout>
 </template>
 <script>
@@ -107,8 +95,6 @@
   export default {
     data () {
       return {
-        pwaPrompt: null,
-        moduleList: true,
         dialog: false,
         search: '',
         headers: [
@@ -166,26 +152,6 @@
       }
     },
     methods: {
-      installAppBtnClick (e) {
-        // Show the prompt
-        this.pwaPrompt.prompt()
-        // Wait for the user to respond to the prompt
-        this.pwaPrompt.userChoice
-          .then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-              console.log('User accepted the A2HS prompt')
-            } else {
-              console.log('User dismissed the A2HS prompt')
-            }
-            // hide our user interface that shows our A2HS button
-            this.pwaPrompt = null
-          })
-      },
-
-      created () {
-        // this.initialize()
-      },
-
       editItem (item) {
         this.editedIndex = this.products.indexOf(item)
         this.editedItem = Object.assign({}, item)
@@ -215,12 +181,6 @@
       }
     },
     mounted () {
-      window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent Chrome 67 and earlier from automatically showing the prompt
-        e.preventDefault()
-        // Stash the event so it can be triggered later.
-        this.pwaPrompt = e
-      })
     }
   }
 </script>

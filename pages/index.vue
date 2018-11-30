@@ -24,16 +24,80 @@
               <v-container grid-list-md>
                 <v-layout wrap>
                   <v-flex xs12 sm6>
-                    <v-text-field v-model="editedItem.title" label="Название"></v-text-field>
+                    <h5 class="image-input-label px-2 subheading">Основное фото</h5>
+                    <v-img
+                            :src="'/api/image/' + editedItem.mainImage"
+                            height="150"
+                            v-if="editedItem.mainImage"
+                            class="main-image"
+                    >
+                      <v-layout fill-height justify-end class="bg-darken">
+                        <v-btn dark icon @click="removeMainImage">
+                          <v-icon>delete</v-icon>
+                        </v-btn>
+                      </v-layout>
+                    </v-img>
+                    <v-btn flat
+                           block
+                           large
+                           color="grey"
+                           @click='pickMainImage'
+                           v-else
+                           class="image-upload-btn"
+                    >
+                      <v-icon>attach_file</v-icon>
+                    </v-btn>
+                    <input
+                            type="file"
+                            style="display: none"
+                            ref="mainImage"
+                            accept="image/*"
+                            @change="mainImageUpload"
+                    >
                   </v-flex>
                   <v-flex xs12 sm6>
+                    <h5 class="image-input-label px-2 subheading">Дополнительное фото</h5>
+                    <v-img
+                            :src="'/api/image/' + editedItem.secondImage"
+                            height="150"
+                            v-if="editedItem.secondImage"
+                            class="main-image"
+                    >
+                      <v-layout fill-height justify-end class="bg-darken">
+                        <v-btn dark icon @click="removeSecondImage">
+                          <v-icon>delete</v-icon>
+                        </v-btn>
+                      </v-layout>
+                    </v-img>
+                    <v-btn flat
+                           block
+                           large
+                           color="grey"
+                           @click='pickSecondImage'
+                           v-else
+                           class="image-upload-btn"
+                    >
+                      <v-icon>attach_file</v-icon>
+                    </v-btn>
+                    <input
+                            type="file"
+                            style="display: none"
+                            ref="secondImage"
+                            accept="image/*"
+                            @change="secondImageUpload"
+                    >
+                  </v-flex>
+                  <v-flex xs12>
+                    <v-text-field v-model="editedItem.title" label="Название"></v-text-field>
+                  </v-flex>
+                  <v-flex xs12>
                     <v-text-field v-model="editedItem.category" label="Категория"></v-text-field>
                   </v-flex>
                   <v-flex xs12>
                     <v-text-field v-model="editedItem.description" label="Описание"></v-text-field>
                   </v-flex>
                   <v-flex xs12 sm6>
-                    <v-text-field v-model="editedItem.discount" label="Скидка"></v-text-field>
+                    <v-text-field v-model="editedItem.discount" label="Цена со скидкой"></v-text-field>
                   </v-flex>
                   <v-flex xs12 sm6>
                     <v-text-field v-model="editedItem.price" label="Цена"></v-text-field>
@@ -85,17 +149,22 @@
       </v-alert>
     </v-data-table>
 
-    <v-layout justify-center class="pt-4" v-if="pwaPrompt">
+    <v-snackbar
+            v-model="snackbar"
+            :color="snackbarColor"
+            :timeout="2000"
+            top
+            right
+    >
+      {{ snackbarMessage }}
       <v-btn
-              slot="activator"
-              color="primary"
-              outline
               dark
-              @click="installAppBtnClick"
+              flat
+              @click="snackbar = false"
       >
-        Установить Приложение
+        Close
       </v-btn>
-    </v-layout>
+    </v-snackbar>
   </v-layout>
 </template>
 <script>
@@ -105,9 +174,15 @@
     data () {
       return {
         pwaPrompt: null,
+        snackbar: false,
+        snackbarMessage: '',
+        snackbarColor: '',
         moduleList: true,
         dialog: false,
         search: '',
+        imageName: '',
+        imageFile: '',
+        imageUrl: '',
         headers: [
           {
             text: 'Товар',
@@ -116,7 +191,7 @@
             value: 'title'
           },
           { text: 'Категория', value: 'category' },
-          { text: 'Скидка', value: 'discount' },
+          { text: 'Цена со скидкой', value: 'discount' },
           { text: 'Цена', value: 'price' },
           { text: 'Действия', value: 'name', sortable: false }
         ],
@@ -127,14 +202,18 @@
           description: '',
           category: 0,
           price: null,
-          discount: null
+          discount: null,
+          mainImage: null,
+          secondImage: null
         },
         defaultItem: {
           title: '',
           description: '',
           category: 0,
           price: null,
-          discount: null
+          discount: null,
+          mainImage: null,
+          secondImage: null
         }
       }
     },
@@ -146,25 +225,20 @@
         val || this.close()
       }
     },
-    created () {
-      // this.initialize()
-    },
     computed: {
       formTitle () {
         return this.editedIndex === -1 ? 'Создать товар' : 'Изменить товар'
       }
     },
     methods: {
-      created () {
-        // this.initialize()
-      },
-
+      /**
+       * API actions
+       * */
       async initialize () {
         let { data } = await this.$axios.get('/api/products')
         this.products = data.data
         // this.$store.commit('initProducts', data)
       },
-
       async createProduct (product) {
         Object.assign(product, {
           mainImage: '',
@@ -173,16 +247,64 @@
         })
         let { data } = await this.$axios.post('/api/products', product)
         console.log('==> createProduct', data)
+        return data.data
       },
-
       async updateProduct (product) {
         let { data } = await this.$axios.put('/api/product/' + product._id, product)
         console.log('==> updateProduct', data)
       },
-
       async removeProduct (product) {
         let { data } = await this.$axios.delete('/api/product/' + product._id)
         console.log('==> removeProduct', data)
+      },
+      async imageUpload (formData) {
+        let { data } = await this.$axios.post('/api/images', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+        console.log('==> imageUpload', data)
+
+        return data
+      },
+      async removeImage (id) {
+        let { data } = await this.$axios.delete('/api/image/' + id)
+        console.log('==> removeImage', data)
+        return data
+      },
+
+      mainImageUpload () {
+        const formData = new FormData()
+        const imageFile = this.$refs.mainImage
+
+        formData.append('productImage', imageFile.files[0])
+
+        this.imageUpload(formData).then(image => {
+          this.editedItem.mainImage = image.data
+        })
+      },
+      removeMainImage () {
+        this.removeImage(this.editedItem.mainImage).then(image => {
+          this.editedItem.mainImage = null
+          this.callSnackbar('Изображение удалено.', 'success')
+        })
+      },
+
+      secondImageUpload () {
+        const formData = new FormData()
+        const imageFile = this.$refs.secondImage
+
+        formData.append('productImage', imageFile.files[0])
+
+        this.imageUpload(formData).then(image => {
+          this.editedItem.secondImage = image.data
+        })
+      },
+      removeSecondImage () {
+        this.removeImage(this.editedItem.secondImage).then(() => {
+          this.editedItem.secondImage = null
+          this.callSnackbar('Изображение удалено.', 'success')
+        })
       },
 
       editItem (item) {
@@ -193,14 +315,12 @@
 
       deleteItem (item) {
         const index = this.products.indexOf(item)
-
-        console.log('==> item', item)
-
         const confirmRemove = confirm('Are you sure you want to delete this item?')
 
         if (confirmRemove) {
           this.removeProduct(item).then(() => {
             this.products.splice(index, 1)
+            this.callSnackbar('Товар успешно удален.', 'success')
           })
         }
       },
@@ -213,19 +333,32 @@
         }, 300)
       },
 
+      callSnackbar (message, color) {
+        this.snackbarMessage = message
+        this.snackbarColor = color
+        this.snackbar = true
+      },
+
       save () {
         if (this.editedIndex > -1) {
-          console.log('==> this.editedItem', this.editedItem)
           this.updateProduct(this.editedItem).then(() => {
             Object.assign(this.products[this.editedIndex], this.editedItem)
+            this.callSnackbar('Товар успешно изменен.', 'success')
           })
         } else {
-          this.createProduct(this.editedItem).then(() => {
-            Object.assign(this.products[this.editedIndex], this.editedItem)
+          this.createProduct(this.editedItem).then(product => {
+            this.products.push(product)
+            this.callSnackbar('Товар успешно создан.', 'success')
           })
-          this.products.push(this.editedItem)
         }
         this.close()
+      },
+
+      pickMainImage () {
+        this.$refs.mainImage.click()
+      },
+      pickSecondImage () {
+        this.$refs.secondImage.click()
       }
     },
     mounted () {
@@ -234,6 +367,32 @@
   }
 </script>
 <style lang="stylus" scoped>
+  .main-image {
+    border-radius: 10px;
+    .layout {
+      display: none;
+      background-color: rgba(0,0,0,0.4);
+
+      p {
+        padding-top: 13px !important;
+      }
+    }
+    &:hover {
+      .layout {
+        display: flex;
+      }
+    }
+  }
+  .image-upload-btn {
+    height: 150px;
+    background-color: #f5f5f5;
+    border-radius: 10px;
+    border: 2px dotted #bdbdbd;
+  }
+  .image-input-label {
+    /*border-bottom: 1px solid rgba(0,0,0,0.38);*/
+    color: rgba(0,0,0,0.54);
+  }
   .max-width__category {
     max-width: 200px;
     overflow-x: scroll;
@@ -256,7 +415,6 @@
 <style lang="stylus">
   .search-products-input {
     .v-input__slot {
-      /*margin: 0;*/
       box-shadow: none !important;
       /*background: #e0e0e0 !important;*/
       background: #fff0 !important;
