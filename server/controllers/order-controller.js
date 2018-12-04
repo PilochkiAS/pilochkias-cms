@@ -1,6 +1,8 @@
 const axios = require('axios')
 const Orders = require('../models/orders')
 const { Types } = require('mongoose')
+const onesignalApi = require('../api/onesignal-api')
+
 const ObjectId = Types.ObjectId;
 
 module.exports = {
@@ -77,6 +79,11 @@ module.exports = {
           res.send({
             data: doc
           })
+        })
+
+        await onesignalApi.sendNotificationToAll({
+          "en": "Someone made an order",
+          "ru": "Кто-то сделал заказ"
         })
       }
     } catch (err) {
