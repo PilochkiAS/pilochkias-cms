@@ -41,6 +41,7 @@ module.exports = {
     mobileAppIOS: true
   },
   modules: [
+    '@nuxtjs/onesignal',
     '@nuxtjs/pwa',
     '@nuxtjs/axios'
   ],
@@ -48,6 +49,12 @@ module.exports = {
     baseURL: '/',
     proxyHeaders: false,
     credentials: false
+  },
+  oneSignal: {
+    init: {
+      appId: 'fe75f5d6-43e3-4a90-b7e6-46faa5136a76'
+      // allowLocalhostAsSecureOrigin: true
+    }
   },
   build: {
     watch: ['server'],
