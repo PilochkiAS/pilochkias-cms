@@ -1,6 +1,6 @@
 module.exports = {
   server: {
-    port: 4000
+    port: 80
   },
   /*
   ** Headers of the page
@@ -41,6 +41,7 @@ module.exports = {
     mobileAppIOS: true
   },
   modules: [
+    '@nuxtjs/onesignal',
     '@nuxtjs/pwa',
     '@nuxtjs/axios'
   ],
@@ -48,6 +49,15 @@ module.exports = {
     baseURL: '/',
     proxyHeaders: false,
     credentials: false
+  },
+  oneSignal: {
+    /** If you want to test a push notifications locally you need to uncomment this line:
+     * appId: 'ed57b76b-d236-422e-b514-eff9397f5e56',
+     * */
+    init: {
+      appId: 'fe75f5d6-43e3-4a90-b7e6-46faa5136a76'
+      // appId: 'ed57b76b-d236-422e-b514-eff9397f5e56',
+    }
   },
   build: {
     watch: ['server'],
