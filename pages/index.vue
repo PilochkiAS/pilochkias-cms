@@ -28,7 +28,7 @@
                     <v-img
                             :src="'/api/image/' + editedItem.mainImage"
                             height="150"
-                            v-if="editedItem.mainImage"
+                            v-if="editedItem.mainImage && editedItem.mainImage.length > 0"
                             class="main-image"
                     >
                       <v-layout fill-height justify-end class="bg-darken">
@@ -43,9 +43,10 @@
                            color="grey"
                            @click='pickMainImage'
                            v-else
-                           class="image-upload-btn"
+                           class="image-upload-btn my-0"
                     >
-                      <v-icon>attach_file</v-icon>
+                      <v-progress-circular :value="mainImageLoading" v-if="mainImageLoading > 0"></v-progress-circular>
+                      <v-icon v-else>attach_file</v-icon>
                     </v-btn>
                     <input
                             type="file"
@@ -60,7 +61,7 @@
                     <v-img
                             :src="'/api/image/' + editedItem.secondImage"
                             height="150"
-                            v-if="editedItem.secondImage"
+                            v-if="editedItem.secondImage && editedItem.secondImage.length > 0"
                             class="main-image"
                     >
                       <v-layout fill-height justify-end class="bg-darken">
@@ -75,9 +76,10 @@
                            color="grey"
                            @click='pickSecondImage'
                            v-else
-                           class="image-upload-btn"
+                           class="image-upload-btn my-0"
                     >
-                      <v-icon>attach_file</v-icon>
+                      <v-progress-circular :value="secondImageLoading" v-if="secondImageLoading > 0"></v-progress-circular>
+                      <v-icon v-else>attach_file</v-icon>
                     </v-btn>
                     <input
                             type="file"
@@ -180,9 +182,6 @@
         moduleList: true,
         dialog: false,
         search: '',
-        imageName: '',
-        imageFile: '',
-        imageUrl: '',
         headers: [
           {
             text: 'Товар',
@@ -214,7 +213,9 @@
           discount: null,
           mainImage: null,
           secondImage: null
-        }
+        },
+        mainImageLoading: null,
+        secondImageLoading: null
       }
     },
     components: {
@@ -237,6 +238,7 @@
       async initialize () {
         let { data } = await this.$axios.get('/api/products')
         this.products = data.data
+        // ToDo: initialize content to vuex store & get content from there.
         // this.$store.commit('initProducts', data)
       },
       async createProduct (product) {
@@ -246,62 +248,71 @@
           isPublished: false
         })
         let { data } = await this.$axios.post('/api/products', product)
-        console.log('==> createProduct', data)
         return data.data
       },
       async updateProduct (product) {
         let { data } = await this.$axios.put('/api/product/' + product._id, product)
-        console.log('==> updateProduct', data)
+        return data
       },
       async removeProduct (product) {
         let { data } = await this.$axios.delete('/api/product/' + product._id)
-        console.log('==> removeProduct', data)
+        return data
       },
-      async imageUpload (formData) {
+      async imageUpload (formData, cb) {
         let { data } = await this.$axios.post('/api/images', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
+          },
+          onUploadProgress (progressEvent) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+
+            cb(percentCompleted)
+            return percentCompleted
           }
         })
-        console.log('==> imageUpload', data)
-
         return data
       },
       async removeImage (id) {
         let { data } = await this.$axios.delete('/api/image/' + id)
-        console.log('==> removeImage', data)
         return data
       },
 
       mainImageUpload () {
         const formData = new FormData()
         const imageFile = this.$refs.mainImage
+        // ToDo: check if imageFile consist an image
 
         formData.append('productImage', imageFile.files[0])
 
-        this.imageUpload(formData).then(image => {
+        this.imageUpload(formData, percent => {
+          this.mainImageLoading = percent === 100 ? -1 : percent
+        }).then(image => {
           this.editedItem.mainImage = image.data
+        })
+      },
+      secondImageUpload () {
+        const formData = new FormData()
+        const imageFile = this.$refs.secondImage
+        // ToDo: check if imageFile consist an image
+
+        formData.append('productImage', imageFile.files[0])
+
+        this.imageUpload(formData, percent => {
+          this.secondImageLoading = percent === 100 ? -1 : percent
+        }).then(image => {
+          this.editedItem.secondImage = image.data
         })
       },
       removeMainImage () {
         this.removeImage(this.editedItem.mainImage).then(image => {
+          this.$refs.mainImage.value = ''
           this.editedItem.mainImage = null
           this.callSnackbar('Изображение удалено.', 'success')
         })
       },
-
-      secondImageUpload () {
-        const formData = new FormData()
-        const imageFile = this.$refs.secondImage
-
-        formData.append('productImage', imageFile.files[0])
-
-        this.imageUpload(formData).then(image => {
-          this.editedItem.secondImage = image.data
-        })
-      },
       removeSecondImage () {
         this.removeImage(this.editedItem.secondImage).then(() => {
+          this.$refs.secondImage.value = ''
           this.editedItem.secondImage = null
           this.callSnackbar('Изображение удалено.', 'success')
         })
@@ -330,18 +341,14 @@
           this.editedItem = Object.assign({}, this.defaultItem)
           this.editedIndex = -1
         }, 300)
-      },
 
-      callSnackbar (message, color) {
-        this.snackbarMessage = message
-        this.snackbarColor = color
-        this.snackbar = true
+        // this.$refs.mainImage.value = ''
+        // this.$refs.secondImage.value = ''
       },
-
       save () {
         if (this.editedIndex > -1) {
-          this.updateProduct(this.editedItem).then(() => {
-            Object.assign(this.products[this.editedIndex], this.editedItem)
+          this.updateProduct(this.editedItem).then(data => {
+            Object.assign(this.products[this.editedIndex], data)
             this.callSnackbar('Товар успешно изменен.', 'success')
           })
         } else {
@@ -354,10 +361,17 @@
       },
 
       pickMainImage () {
+        console.log('==> pickMainImage')
         this.$refs.mainImage.click()
       },
       pickSecondImage () {
+        console.log('==> pickSecondImage')
         this.$refs.secondImage.click()
+      },
+      callSnackbar (message, color) {
+        this.snackbarMessage = message
+        this.snackbarColor = color
+        this.snackbar = true
       }
     },
     mounted () {

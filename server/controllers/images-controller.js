@@ -29,15 +29,19 @@ module.exports = {
    *  GET /api/image/:id
    * */
   async getImageById (req, res, next) {
-    await Images.findOne({_id: ObjectId(req.params.id)}, function (err, doc) {
-      if (err) {
-        res.status(500).send({ error: {message: err.message, info: err }})
-        return
-      }
+    try {
+      await Images.findOne({_id: ObjectId(req.params.id)}, function (err, doc) {
+        if (err || !doc) {
+          res.status(500).send({ error: {message: 'DB err', info: err || doc }})
+          return
+        }
 
-      res.contentType(doc.img.contentType)
-      res.send(doc.img.data)
-    })
+        res.contentType(doc.img.contentType)
+        res.send(doc.img.data)
+      })
+    } catch (err) {
+      res.status(500).send({ error: { message: err.message, info: err }})
+    }
   },
   /**
    *  POST /api/images
