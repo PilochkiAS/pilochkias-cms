@@ -89,8 +89,11 @@
                             @change="secondImageUpload"
                     >
                   </v-flex>
-                  <v-flex xs12>
+                  <v-flex xs10>
                     <v-text-field v-model="editedItem.title" label="Название"></v-text-field>
+                  </v-flex>
+                  <v-flex xs2>
+                    <v-text-field v-model="editedItem.number" label="Номер"></v-text-field>
                   </v-flex>
                   <v-flex xs12>
                     <v-text-field v-model="editedItem.category" label="Категория"></v-text-field>
@@ -126,6 +129,7 @@
             :loading="false"
     >
       <template slot="items" slot-scope="props">
+        <td>{{ props.item.number }}</td>
         <td class="max-width__title">{{ props.item.title }}</td>
         <td class="text-xs-right max-width__category">{{ props.item.category }}</td>
         <td class="text-xs-right">{{ props.item.discount }}</td>
@@ -184,6 +188,11 @@
         search: '',
         headers: [
           {
+            text: 'Номер',
+            align: 'left',
+            value: 'number'
+          },
+          {
             text: 'Товар',
             align: 'left',
             sortable: false,
@@ -197,6 +206,7 @@
         products: [],
         editedIndex: -1,
         editedItem: {
+          number: 0,
           title: '',
           description: '',
           category: 0,
@@ -206,6 +216,7 @@
           secondImage: null
         },
         defaultItem: {
+          number: 0,
           title: '',
           description: '',
           category: 0,
@@ -341,9 +352,6 @@
           this.editedItem = Object.assign({}, this.defaultItem)
           this.editedIndex = -1
         }, 300)
-
-        // this.$refs.mainImage.value = ''
-        // this.$refs.secondImage.value = ''
       },
       save () {
         if (this.editedIndex > -1) {
@@ -361,11 +369,9 @@
       },
 
       pickMainImage () {
-        console.log('==> pickMainImage')
         this.$refs.mainImage.click()
       },
       pickSecondImage () {
-        console.log('==> pickSecondImage')
         this.$refs.secondImage.click()
       },
       callSnackbar (message, color) {
