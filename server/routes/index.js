@@ -1,7 +1,7 @@
 const { Router } = require('express')
-const {getCaseStudies, getReviews, getBlogPosts} = require('../controllers/index')
+const { getPriceListPDF } = require('../controllers/index')
 const router = Router()
 
-router.get('/case-studies', getCaseStudies)
+router.get('/price-list', getPriceListPDF)
 
 module.exports = router
