@@ -20,7 +20,7 @@ ImagesSchema.pre('remove', function(next) {
   // to be notified of the calls' result.
   //this.model('Voucher').remove({ user: this._id }, next);
 
-  console.log("==> pre remove test".green);
+  // console.log("==> pre remove test".green);
   next();
 });
 

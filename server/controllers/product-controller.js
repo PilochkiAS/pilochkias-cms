@@ -16,6 +16,8 @@ module.exports = {
       products.find({category: req.query.category})
     }
 
+    products.sort({ number: 1 })
+
     products.exec(async (err, docs) => {
       if (err) {
         res.status(500).send({error: {message: err.message, info: err }})
@@ -69,6 +71,7 @@ module.exports = {
           mainImage: data.mainImage,
           secondImage: data.secondImage,
           category: data.category,
+          number: data.number,
           price: data.price,
           discount: data.discount,
           isPublished: data.isPublished

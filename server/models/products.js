@@ -23,6 +23,9 @@ const ProductsSchema = new Schema({
 		type: Number,
     required: 'Product category is required'
 	},
+	number: {
+		type: Number
+	},
 	price: {
 		type: Number,
     required: 'Product price is required'
