@@ -41,6 +41,15 @@
                     <v-text-field
                             :value="editedItem.customer.fullName"
                             readonly
+                            label="Имя"
+                            class="pt-0 mt-0 hide-details"
+                    ></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6>
+                    <v-text-field
+                            :value="editedItem.customer.email"
+                            readonly
+                            label="Email"
                             class="pt-0 mt-0 hide-details"
                     ></v-text-field>
                   </v-flex>
@@ -48,15 +57,26 @@
                     <v-text-field
                             :value="editedItem.customer.phone"
                             readonly
+                            label="Телефон"
                             class="pt-0 mt-0 hide-details"
                     ></v-text-field>
                   </v-flex>
-                  <v-flex xs12 sm6>
+                  <v-flex xs12>
                     <v-text-field
                             :value="editedItem.customer.address"
                             readonly
+                            label="Адрес доставки"
                             class="pt-0 mt-0 hide-details"
                     ></v-text-field>
+                  </v-flex>
+                  <v-flex xs12>
+                    <v-textarea
+                        name="input-7-1"
+                        label="Гравировка"
+                        :value="editedItem.engraving.length > 0 ? editedItem.engraving : 'Без гравировки'"
+                        class="pt-0 mt-0 hide-details"
+                        readonly
+                    ></v-textarea>
                   </v-flex>
                   <v-flex xs12>
                     <v-text-field
@@ -194,6 +214,7 @@
           id: '',
           customerName: '',
           customer: '',
+          engraving: '',
           totalPrice: 0,
           products: [],
           isDone: null,
@@ -203,6 +224,7 @@
           id: '',
           customerName: '',
           customer: '',
+          engraving: '',
           totalPrice: 0,
           products: [],
           isDone: null,
@@ -235,6 +257,7 @@
             customer: obj.customer,
             totalPrice,
             products: obj.products,
+            engraving: obj.engraving,
             isDone: obj.isDone,
             createdAt: moment(obj.createdAt).format('DD.MM.YY, h:mm:ss a')
           }

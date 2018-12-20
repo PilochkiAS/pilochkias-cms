@@ -66,8 +66,10 @@ module.exports = {
           customer: {
             fullName: data.customer.fullName,
             phone: data.customer.phone,
-            address: data.customer.address
+            address: data.customer.address,
+            email: data.customer.email
           },
+          engraving: data.engraving,
           isDone: false
         })
 

@@ -16,7 +16,15 @@ module.exports = {
       products.find({category: req.query.category})
     }
 
-    products.sort({ number: 1 })
+    let { price } = req.query
+
+    if (price === '-1') {
+      products.sort({ price: -1 })
+    } else if (price === '1') {
+      products.sort({ price: 1 })
+    } else {
+      products.sort({ number: 1 })
+    }
 
     products.exec(async (err, docs) => {
       if (err) {

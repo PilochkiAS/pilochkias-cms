@@ -16,9 +16,11 @@ const OrdersSchema = new Schema({
 	customer: {
   	fullName: { type: String },
   	phone: { type: String },
+  	email: { type: String },
   	address: { type: String }
 	},
-	isDone:{
+  engraving: { type: String },
+	isDone: {
 		type: Boolean,
 		default: false
 	}
