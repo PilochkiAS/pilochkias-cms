@@ -96,10 +96,22 @@
                     <v-text-field v-model="editedItem.number" label="Номер"></v-text-field>
                   </v-flex>
                   <v-flex xs12>
-                    <v-text-field v-model="editedItem.category" label="Категория"></v-text-field>
+                    <v-select
+                        v-model="editedCategorySelect"
+                        :items="categoryItems"
+                        label="Категория"
+                        item-text="title"
+                        item-value="id"
+                        return-object
+                        hide-details
+                    ></v-select>
                   </v-flex>
                   <v-flex xs12>
-                    <v-text-field v-model="editedItem.description" label="Описание"></v-text-field>
+                    <v-textarea
+                        v-model="editedItem.description"
+                        label="Описание"
+                    ></v-textarea>
+                    <!--<v-text-field v-model="editedItem.description" label="Описание"></v-text-field>-->
                   </v-flex>
                   <v-flex xs12 sm6>
                     <v-text-field v-model="editedItem.discount" label="Цена со скидкой"></v-text-field>
@@ -215,6 +227,7 @@
           mainImage: null,
           secondImage: null
         },
+        editedCategorySelect: { title: '0 - Вся продукция', id: '0' },
         defaultItem: {
           number: 0,
           title: '',
@@ -226,7 +239,17 @@
           secondImage: null
         },
         mainImageLoading: null,
-        secondImageLoading: null
+        secondImageLoading: null,
+        categoryItems: [
+          { title: '0 - Вся продукция', id: '0' },
+          { title: '1 - Пилочки для маникюра и педикюра', id: '1' },
+          { title: '2 - Сменные файлы для пилочек', id: '2' },
+          { title: '3 - Наборы с Podo-Disk', id: '3' },
+          { title: '4 - Шрифты для гравировки', id: '4' },
+          { title: '5 - Сменные файлы для Podo-Disk', id: '5' },
+          { title: '6 - Наборы Баф BLACK', id: '6' },
+          { title: '7 - Одноразовая продукция', id: '7' }
+        ]
       }
     },
     components: {
@@ -235,6 +258,9 @@
     watch: {
       dialog (val) {
         val || this.close()
+      },
+      editedCategorySelect (to, from) {
+        this.editedItem.category = to.id
       }
     },
     computed: {
@@ -332,6 +358,9 @@
       editItem (item) {
         this.editedIndex = this.products.indexOf(item)
         this.editedItem = Object.assign({}, item)
+
+        // assign the category to this.editedCategorySelect for displaying the correct title in the select element
+        this.editedCategorySelect = this.categoryItems.find(category => parseInt(category.id) === item.category)
         this.dialog = true
       },
       deleteItem (item) {
