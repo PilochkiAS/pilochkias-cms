@@ -23,7 +23,7 @@
             <v-card-title>
               <span class="headline">Просмотр заказа</span>
               <v-spacer></v-spacer>
-              <p class="ma-0">id: {{ editedItem._id }}</p>
+              <p class="ma-0">id: {{ editedItem.id }}</p>
             </v-card-title>
 
             <v-card-text class="pt-0 ">
@@ -251,7 +251,7 @@
           })
 
           return {
-            id: index + 1,
+            id: obj.id,
             _id: obj._id,
             customerName: obj.customer.fullName,
             customer: obj.customer,

@@ -19,6 +19,7 @@ module.exports = {
         res.status(500).send({ error: { message: err.message, info: err }})
         return
       }
+      console.log('==> getOrders'.green, docs)
 
       res.send({
         data: docs
@@ -61,7 +62,11 @@ module.exports = {
           res.send(doc)
         })
       } else {
-        order = new Orders({
+        const ordersCount = await Orders.count()
+        const salt = Math.floor(Math.random() * (99999 - 10000) ) + 10000;
+
+        await Orders.create({
+          id: ordersCount + '' + salt,
           products: data.products,
           customer: {
             fullName: data.customer.fullName,
@@ -71,9 +76,7 @@ module.exports = {
           },
           engraving: data.engraving,
           isDone: false
-        })
-
-        await order.save((err, doc) => {
+        }, (err, doc) => {
           if (err) {
             res.status(500).send({error: {message: err.message, info: err }})
             return
