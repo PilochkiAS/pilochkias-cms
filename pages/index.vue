@@ -111,13 +111,74 @@
                         v-model="editedItem.description"
                         label="Описание"
                     ></v-textarea>
-                    <!--<v-text-field v-model="editedItem.description" label="Описание"></v-text-field>-->
                   </v-flex>
-                  <v-flex xs12 sm6>
-                    <v-text-field v-model="editedItem.discount" label="Цена со скидкой"></v-text-field>
+                  <v-flex xs12 sm6 v-if="editedCategorySelect.id !== '2' && editedCategorySelect.id !== '1'">
+                    <v-text-field v-model="editedItem.discount" label="Цена со скидкой" hide-details></v-text-field>
                   </v-flex>
-                  <v-flex xs12 sm6>
-                    <v-text-field v-model="editedItem.price" label="Цена"></v-text-field>
+                  <v-flex xs12 sm6 v-if="editedCategorySelect.id !== '2' && editedCategorySelect.id !== '1'">
+                    <v-text-field v-model="editedItem.price" label="Цена" hide-details></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 v-else-if="editedCategorySelect.id === '1'">
+                    <v-layout wrap>
+                      <v-flex xs12 sm3>
+                        <p class="accent--text subheading mb-0">1-6 шт.</p>
+                      </v-flex>
+                      <v-flex xs12 sm9>
+                        <v-text-field v-model="editedItem.wholesale.limit1" hide-details class="pt-0"></v-text-field>
+                      </v-flex>
+
+                      <v-flex xs12 sm3>
+                        <p class="accent--text subheading mb-0">6-20 шт.</p>
+                      </v-flex>
+                      <v-flex xs12 sm9>
+                        <v-text-field v-model="editedItem.wholesale.limit2" hide-details class="pt-0"></v-text-field>
+                      </v-flex>
+
+                      <v-flex xs12 sm3>
+                        <p class="accent--text subheading mb-0">20-50 шт.</p>
+                      </v-flex>
+                      <v-flex xs12 sm9>
+                        <v-text-field v-model="editedItem.wholesale.limit3" hide-details class="pt-0"></v-text-field>
+                      </v-flex>
+
+                      <v-flex xs12 sm3>
+                        <p class="accent--text subheading mb-0">50-... шт.</p>
+                      </v-flex>
+                      <v-flex xs12 sm9>
+                        <v-text-field v-model="editedItem.wholesale.limit4" hide-details class="pt-0"></v-text-field>
+                      </v-flex>
+                    </v-layout>
+                  </v-flex>
+                  <v-flex xs12 v-else-if="editedCategorySelect.id === '2'">
+                    <v-layout wrap align-center>
+                      <v-flex xs12 sm3>
+                        <p class="accent--text subheading mb-0">1-50 шт.</p>
+                      </v-flex>
+                      <v-flex xs12 sm9>
+                        <v-text-field v-model="editedItem.wholesale.limit1" hide-details class="pt-0"></v-text-field>
+                      </v-flex>
+
+                      <v-flex xs12 sm3>
+                        <p class="accent--text subheading mb-0">50-250 шт.</p>
+                      </v-flex>
+                      <v-flex xs12 sm9>
+                        <v-text-field v-model="editedItem.wholesale.limit2" hide-details class="pt-0"></v-text-field>
+                      </v-flex>
+
+                      <v-flex xs12 sm3>
+                        <p class="accent--text subheading mb-0">250-400 шт.</p>
+                      </v-flex>
+                      <v-flex xs12 sm9>
+                        <v-text-field v-model="editedItem.wholesale.limit3" hide-details class="pt-0"></v-text-field>
+                      </v-flex>
+
+                      <v-flex xs12 sm3>
+                        <p class="accent--text subheading mb-0">400-... шт.</p>
+                      </v-flex>
+                      <v-flex xs12 sm9>
+                        <v-text-field v-model="editedItem.wholesale.limit4" hide-details class="pt-0"></v-text-field>
+                      </v-flex>
+                    </v-layout>
                   </v-flex>
                 </v-layout>
               </v-container>
@@ -145,7 +206,7 @@
         <td class="max-width__title">{{ props.item.title }}</td>
         <td class="text-xs-right max-width__category">{{ props.item.category }}</td>
         <td class="text-xs-right">{{ props.item.discount }}</td>
-        <td class="text-xs-right">{{ props.item.price }}</td>
+        <td class="text-xs-right">{{ props.item.price ? props.item.price : props.item.wholesale.limit1 }}</td>
         <td class="justify-center layout px-0">
           <v-btn small
                  @click="editItem(props.item)"
@@ -225,7 +286,13 @@
           price: null,
           discount: null,
           mainImage: null,
-          secondImage: null
+          secondImage: null,
+          wholesale: {
+            limit1: 0,
+            limit2: 0,
+            limit3: 0,
+            limit4: 0
+          }
         },
         editedCategorySelect: { title: '0 - Вся продукция', id: '0' },
         defaultItem: {
@@ -236,7 +303,13 @@
           price: null,
           discount: null,
           mainImage: null,
-          secondImage: null
+          secondImage: null,
+          wholesale: {
+            limit1: 0,
+            limit2: 0,
+            limit3: 0,
+            limit4: 0
+          }
         },
         mainImageLoading: null,
         secondImageLoading: null,

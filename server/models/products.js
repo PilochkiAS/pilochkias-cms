@@ -28,10 +28,16 @@ const ProductsSchema = new Schema({
 	},
 	price: {
 		type: Number,
-    required: 'Product price is required'
+    // required: 'Product price is required'
 	},
 	discount: {
 		type: Number,
+	},
+  wholesale: {
+		limit1: { type: Number },
+		limit2: { type: Number },
+		limit3: { type: Number },
+		limit4: { type: Number }
 	},
 	isPublished:{
 		type: Boolean,

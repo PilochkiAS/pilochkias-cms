@@ -82,15 +82,16 @@ module.exports = {
           number: data.number,
           price: data.price,
           discount: data.discount,
-          isPublished: data.isPublished
+          isPublished: data.isPublished,
+          wholesale: data.wholesale
         })
 
         await product.save((err, doc) => {
           if (err) {
+            console.log('==> error createOrUpdateProduct product.save'.red, err)
             res.status(500).send({error: {message: err.message, info: err }})
             return
           }
-          // saved!
           res.send({
             data: doc
           })
@@ -98,6 +99,7 @@ module.exports = {
       }
 
     } catch (err) {
+      console.log('==> error createOrUpdateProduct'.red, err)
       res.status(500).send({ error: { message: err.message, info: err }})
     }
   },
@@ -126,6 +128,7 @@ module.exports = {
         });
       })
     } catch (err) {
+      console.log('==> error removeProduct'.red, err)
       res.status(500).send({ error: { message: err.message, info: err }})
     }
   },
