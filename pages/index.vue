@@ -93,7 +93,7 @@
                     <v-text-field v-model="editedItem.title" label="Название"></v-text-field>
                   </v-flex>
                   <v-flex xs2>
-                    <v-text-field v-model="editedItem.number" label="Номер"></v-text-field>
+                    <v-text-field v-model="editedItem.ordinalNumber" label="Номер"></v-text-field>
                   </v-flex>
                   <v-flex xs12>
                     <v-select
@@ -202,7 +202,7 @@
             :loading="false"
     >
       <template slot="items" slot-scope="props">
-        <td>{{ props.item.number }}</td>
+        <td>{{ props.item.ordinalNumber }}</td>
         <td class="max-width__title">{{ props.item.title }}</td>
         <td class="text-xs-right max-width__category">{{ props.item.category }}</td>
         <td class="text-xs-right">{{ props.item.discount }}</td>
@@ -279,7 +279,7 @@
         products: [],
         editedIndex: -1,
         editedItem: {
-          number: 0,
+          ordinalNumber: 0,
           title: '',
           description: '',
           category: 0,
@@ -296,7 +296,7 @@
         },
         editedCategorySelect: { title: '0 - Вся продукция', id: '0' },
         defaultItem: {
-          number: 0,
+          ordinalNumber: 0,
           title: '',
           description: '',
           category: 0,

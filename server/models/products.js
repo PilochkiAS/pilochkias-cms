@@ -23,12 +23,12 @@ const ProductsSchema = new Schema({
 		type: Number,
     required: 'Product category is required'
 	},
-	number: {
+	ordinalNumber: {
 		type: Number
 	},
 	price: {
 		type: Number,
-    // required: 'Product price is required'
+    required: 'Product price is required'
 	},
 	discount: {
 		type: Number,

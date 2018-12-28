@@ -23,7 +23,7 @@ module.exports = {
     } else if (price === '1') {
       products.sort({ price: 1 })
     } else {
-      products.sort({ number: 1 })
+      products.sort({ ordinalNumber: 1 })
     }
 
     products.exec(async (err, docs) => {
@@ -73,13 +73,16 @@ module.exports = {
           res.send(doc)
         })
       } else {
+        if (data.wholesale.limit1) {
+          data.price = data.wholesale.limit1
+        }
         product = new Products({
           title: data.title,
           description: data.description,
           mainImage: data.mainImage,
           secondImage: data.secondImage,
           category: data.category,
-          number: data.number,
+          ordinalNumber: data.ordinalNumber,
           price: data.price,
           discount: data.discount,
           isPublished: data.isPublished,
